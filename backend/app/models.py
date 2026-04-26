@@ -15,7 +15,7 @@ class Notes(Base):
     __tablename__ = "notes"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     title = Column(String(255), nullable=False)
     content = Column(Text)
     ai_tags = Column(ARRAY(String))
@@ -24,7 +24,7 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     project = Column(String(100))
     title = Column(String(255), nullable=False)
     content = Column(Text)
@@ -39,7 +39,7 @@ class CalendarEvent(Base):
     __tablename__ = "calendar_events"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     title = Column(String(255), nullable=False)
     content = Column(Text)
     start_time = Column(DateTime, nullable=False)
@@ -52,7 +52,7 @@ class MapRoute(Base):
     __tablename__ = "maps_routes"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False)
     start_point = Column(String(500), nullable=False)
     end_point = Column(String(500), nullable=False)
@@ -63,7 +63,7 @@ class Sheet(Base):
     __tablename__ = "sheets"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     columns = Column(JSONB)
     rows = Column(JSONB)
     google_sheet_id = Column(String(255))
