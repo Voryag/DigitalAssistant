@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from datetime import datetime
+from typing import List, Optional
 
 class UserCreate(BaseModel):
     username: str
@@ -21,3 +22,18 @@ class Token(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+class NoteCreate(BaseModel):
+    title: str
+    content: Optional[str] = None
+    ai_tags: Optional[List[str]] = []
+
+class NoteResponse(BaseModel):
+    id: int
+    user_id: int
+    title: str
+    content: Optional[str] = None
+    ai_tags: Optional[List[str]] = []
+
+    class Config:
+        from_attributes = []
