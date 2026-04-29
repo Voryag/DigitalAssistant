@@ -3,12 +3,16 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.database import get_db
-from app.models import Notes
+from app.models import Note
 from app.schemas import NoteCreate, NoteResponse
 from app.auth import get_current_user
 from app.models import User
 
-router = APIRouter(prefix="/notes", tags=["notes"])
+router = APIRouter(
+    prefix="/notes",
+    tags=["notes"],
+    dependencies=[Depends(get_current_user)]
+)
 
 #Получить все заметки текущего пользователя
 @router.get("/", response_model=List[NoteResponse])
@@ -16,17 +20,18 @@ def get_notes(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    notes = db.query(Notes).filter(Notes.user_id = current_user.id).all()
+    notes = db.query(Note).filter(Note.user_id == current_user.id).all()
     return notes
 
 #Создать заметку
 @router.post("/", response_model=NoteResponse, status_code=status.HTTP_201_CREATED)
 def create_note(
     note_data: NoteCreate,
-    db: Session = Depends(get_current_user)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
-    note = Notes(
-        user_id=current_user.id
+    note = Note(
+        user_id=current_user.id,
         title=note_data.title,
         content=note_data.content,
         ai_tags=note_data.ai_tags
@@ -44,7 +49,7 @@ def update_note(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    note = db.query(Notes).filter(Notes.id == note_id, Note.user_id == current_user.id).first() 
+    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first() 
     if not note:
         raise HTTPException(status_code=404, detail="Заметка не найдена")
     
@@ -62,7 +67,7 @@ def delete_note(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    note = db.query(Notes).filter(Notes.id == note_id, Notes.user_id == current_user.id).first()
+    note = db.query(Note).filter(Note.id == note_id, Note.user_id == current_user.id).first()
     if not note:
         raise HTTPException(status_code=404, detail="Заметка не найдена")
     
