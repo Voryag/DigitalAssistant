@@ -11,7 +11,8 @@ from app.models import User
 router = APIRouter(
     prefix="/notes",
     tags=["notes"],
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)],
+    responses={401: {"description": "Unauthorized"}}
 )
 
 #Получить все заметки текущего пользователя

@@ -26,7 +26,7 @@ class GitLabIssueResponse(BaseModel):
 async def create_issue(request: GitLabIssueRequest):
     try:
         result = await create_gitlab_issue(
-            title=request.title
+            title=request.title,
             description=request.description,
             labels=request.labels
         )
