@@ -21,5 +21,5 @@ class ParseResponse(BaseModel):
 
 @router.post("/parse", response_model=ParseResponse)
 async def parse_text(request: ParseRequest):
-    result = await parse_user_request(request.text)
+    result = parse_user_request(request.text)
     return ParseResponse(intent=result["intent"], tags=result["tags"])

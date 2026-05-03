@@ -4,14 +4,11 @@ import requests
 from app.config import OLLAMA_URL, MODEL
 
 
-
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL = "qwen2.5:3b"
 
 
 def parse_user_request(text: str) -> dict:
-    """
-    Отправляет текст в Ollama и получает категорию и теги.
-    Работает СИНХРОННО — никаких async/await.
-    """
     prompt = f"""Ты — анализатор запросов. Определи категорию и теги. Ответь ТОЛЬКО JSON.
 
 Категории: task, note, calendar, maps, sheet.
@@ -21,11 +18,13 @@ def parse_user_request(text: str) -> dict:
 "Встреча с командой в 15" -> {{"intent":"calendar","tags":["работа"]}}
 "Идея для проекта" -> {{"intent":"note","tags":["идеи"]}}
 
+prompt_bytes = prompt_text.encode("utf-8") 
+
 Запрос: "{text}"
 JSON:"""
 
     try:
-        # Обычный синхронный POST-запрос
+        headers = {"Content-Type": "application/json; charset=utf-8"}
         response = requests.post(
             OLLAMA_URL,
             json={
@@ -35,6 +34,7 @@ JSON:"""
                 "format": "json",
                 "options": {"temperature": 0.1}
             },
+            headers=headers,
             timeout=60
         )
         response.raise_for_status()
@@ -43,14 +43,10 @@ JSON:"""
         raw = data["response"].strip()
         print(f"OLLAMA: {raw}")
 
-        # Ищем JSON в ответе
         match = re.search(r'\{[^{}]*\}', raw)
         if match:
             result = json.loads(match.group())
-            return {
-                "intent": result.get("intent", "note"),
-                "tags": result.get("tags", [])
-            }
+            return {"intent": result.get("intent", "note"), "tags": result.get("tags", [])}
 
         return {"intent": "note", "tags": []}
 
