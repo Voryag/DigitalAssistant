@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.database import engine, Base
 from app.models import User, Note, Task, CalendarEvent, MapRoute, Sheet
-from app.routers import auth_router, notes, gitlab_test
+from app.routers import auth_router, notes, gitlab_test, ai
 
 Base.metadata.create_all(bind=engine)
 
@@ -10,6 +10,7 @@ app = FastAPI(title="Digital Assistant API")
 app.include_router(auth_router.router)
 app.include_router(notes.router)
 app.include_router(gitlab_test.router)
+app.include_router(ai.router)
 
 
 @app.get("/")
