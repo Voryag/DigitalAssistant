@@ -1,39 +1,42 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
-import 'register_screen.dart';
-import 'dashboard_screen.dart';
+import 'login_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  final ApiClient apiClient;
+
+  const RegisterScreen({super.key, required this.apiClient});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _apiClient = ApiClient();
   bool _loading = false;
 
-  Future<void> _login() async {
+  Future<void> _register() async {
     setState(() => _loading = true);
 
     try {
-      final result = await _apiClient.login(
+      final result = await widget.apiClient.register(
         _usernameController.text.trim(),
+        _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
       if (!mounted) return;
 
-      if (result.containsKey('access_token')) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DashboardScreen(apiClient: _apiClient),
+      if (result.containsKey('id')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Регистрация успешна! Теперь войдите'),
+            backgroundColor: Colors.green,
           ),
         );
+        Navigator.pop(context);
       } else {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -59,24 +62,16 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0D1B2A),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0A1628),
+        title: const Text('Регистрация'),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.auto_awesome, size: 64, color: Color(0xFF1B6EF3)),
-              const SizedBox(height: 16),
-              const Text(
-                'Цифровой Ассистент',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Организуй свою жизнь',
-                style: TextStyle(fontSize: 14, color: Colors.white54),
-              ),
-              const SizedBox(height: 40),
               TextField(
                 controller: _usernameController,
                 style: const TextStyle(color: Colors.white),
@@ -90,9 +85,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  focusedBorder: OutlineInputBorder(
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _emailController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  labelStyle: const TextStyle(color: Colors.white54),
+                  floatingLabelStyle: const TextStyle(color: Color(0xFF1B6EF3)),
+                  filled: true,
+                  fillColor: const Color(0xFF1B2838),
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF1B6EF3), width: 2),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
@@ -111,17 +118,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF1B6EF3), width: 2),
-                  ),
                 ),
               ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _loading ? null : _login,
+                  onPressed: _loading ? null : _register,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.all(16),
                     backgroundColor: const Color(0xFF1B6EF3),
@@ -136,28 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: 24,
                           child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                         )
-                      : const Text('Войти', style: TextStyle(fontSize: 16)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => RegisterScreen(apiClient: _apiClient)),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.all(16),
-                    side: const BorderSide(color: Color(0xFF1B6EF3)),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('Зарегистрироваться', style: TextStyle(fontSize: 16)),
+                      : const Text('Зарегистрироваться', style: TextStyle(fontSize: 16)),
                 ),
               ),
             ],
