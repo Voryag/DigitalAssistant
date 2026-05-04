@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.models import User, Note, Task, CalendarEvent, MapRoute, Sheet
 from app.routers import auth_router, notes, gitlab_test, ai
@@ -6,6 +7,15 @@ from app.routers import auth_router, notes, gitlab_test, ai
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Digital Assistant API")
+
+#Разрешение запросов из Flutter
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(auth_router.router)
 app.include_router(notes.router)
