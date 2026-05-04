@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List
 
 from app.auth import get_current_user
-from app.lm_studio_client import parse_user_request
+from app.ollama_client import parse_user_request
 
 router = APIRouter(
     prefix="/ai",
