@@ -109,7 +109,6 @@ class ApiClient {
     return [];
   }
 
-  // Создать задачу
   Future<Map<String, dynamic>?> createTask({
     required String title,
     String? description,
@@ -138,7 +137,6 @@ class ApiClient {
     return null;
   }
 
-  // Обновить задачу
   Future<bool> updateTask({
     required int id,
     required String title,
@@ -165,12 +163,24 @@ class ApiClient {
     return response.statusCode == 200;
   }
 
-  // Удалить задачу
   Future<bool> deleteTask(int id) async {
     final response = await http.delete(
       Uri.parse('$baseUrl/tasks/$id'),
       headers: _headers,
     );
     return response.statusCode == 204;
+  }
+
+  // AI-парсинг
+  Future<Map<String, dynamic>?> parseAI(String text) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/ai/parse'),
+      headers: _headers,
+      body: jsonEncode({'text': text}),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return null;
   }
 }
