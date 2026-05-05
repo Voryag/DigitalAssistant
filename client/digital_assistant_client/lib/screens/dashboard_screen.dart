@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
-import 'package:digital_assistant_client/screens/login_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final ApiClient apiClient;
@@ -12,169 +11,163 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  List<dynamic> _notes = [];
-  bool _loading = true;
+  final _messageController = TextEditingController();
+  final _scrollController = ScrollController();
+  final List<Map<String, dynamic>> _messages = [];
+  bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadNotes();
+    _addAssistantMessage('Привет! Напиши, что нужно сделать, и я создам задачу или заметку.');
   }
 
-  Future<void> _loadNotes() async {
-    final notes = await widget.apiClient.getNotes();
-    if (!mounted) return;
+  void _addAssistantMessage(String text) {
     setState(() {
-      _notes = notes;
-      _loading = false;
+      _messages.add({'role': 'assistant', 'text': text, 'time': DateTime.now()});
     });
   }
 
-  Future<void> _createNote() async {
-    final titleController = TextEditingController();
-    final contentController = TextEditingController();
+  Future<void> _sendMessage() async {
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
 
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1B2838),
-        title: const Text('Новая заметка', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Заголовок',
-                labelStyle: const TextStyle(color: Colors.white54),
-                floatingLabelStyle: const TextStyle(color: Color(0xFF1B6EF3)),
-                filled: true,
-                fillColor: const Color(0xFF0D1B2A),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF1B6EF3), width: 2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: contentController,
-              style: const TextStyle(color: Colors.white),
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: 'Текст',
-                labelStyle: const TextStyle(color: Colors.white54),
-                floatingLabelStyle: const TextStyle(color: Color(0xFF1B6EF3)),
-                filled: true,
-                fillColor: const Color(0xFF0D1B2A),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF1B6EF3), width: 2),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Отмена', style: TextStyle(color: Colors.white70)),
-              ),
-              const SizedBox(width: 16),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1B6EF3),
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Создать'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+    setState(() {
+      _messages.add({'role': 'user', 'text': text, 'time': DateTime.now()});
+      _loading = true;
+    });
+    _messageController.clear();
 
-    if (result == true) {
-      await widget.apiClient.createNote(
-        titleController.text.trim(),
-        contentController.text.trim(),
-        [],
-      );
-      _loadNotes();
+    try {
+      final aiResult = await widget.apiClient.parseAI(text);
+
+      String reply = '';
+
+      if (aiResult != null) {
+        final intent = aiResult['intent'] ?? 'note';
+        final tags = List<String>.from(aiResult['tags'] ?? []);
+
+        if (intent == 'task') {
+          await widget.apiClient.createTask(
+            title: text,
+            tags: tags,
+          );
+          reply = '✅ Создал задачу «$text»${tags.isNotEmpty ? '\n📌 Теги: ${tags.join(", ")}' : ''}';
+        } else if (intent == 'note') {
+          await widget.apiClient.createNote(text, '', tags);
+          reply = '📝 Сохранил заметку${tags.isNotEmpty ? '\n📌 Теги: ${tags.join(", ")}' : ''}';
+        } else if (intent == 'calendar') {
+          reply = '📅 Добавил в календарь: $text';
+        } else {
+          reply = '💡 $text';
+        }
+      } else {
+        reply = '⚠️ Не удалось обработать запрос';
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _messages.add({'role': 'assistant', 'text': reply, 'time': DateTime.now()});
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add({'role': 'assistant', 'text': '❌ Ошибка соединения с сервером', 'time': DateTime.now()});
+        _loading = false;
+      });
     }
-  }
 
-  Future<void> _deleteNote(int id) async {
-    await widget.apiClient.deleteNote(id);
-    _loadNotes();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0D1B2A),
       appBar: AppBar(
-        title: const Text('Цифровой Ассистент', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Digital Helper', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
+        backgroundColor: const Color(0xFF0A1628),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.list_alt),
+            onPressed: () {},
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                MaterialPageRoute(builder: (_) => const _LoginRedirect()),
                 (route) => false,
               );
             },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _sectionTitle('Заметки', Icons.note),
-                IconButton(
-                  icon: const Icon(Icons.add_circle, color: Color(0xFF1B6EF3), size: 30),
-                  onPressed: _createNote,
-                ),
-              ],
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16),
+              itemCount: _messages.length + (_loading ? 1 : 0),
+              itemBuilder: (_, i) {
+                if (_loading && i == _messages.length) {
+                  return const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white54),
+                      ),
+                    ),
+                  );
+                }
+                return _buildMessage(_messages[i]);
+              },
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _notes.isEmpty
-                      ? const Center(
-                          child: Text('Нет заметок', style: TextStyle(color: Colors.white54, fontSize: 16)),
-                        )
-                      : ListView.builder(
-                          itemCount: _notes.length,
-                          itemBuilder: (_, i) {
-                            final note = _notes[i];
-                            return _buildNoteCard(
-                              note['title'] ?? '',
-                              note['content'] ?? '',
-                              note['id'] ?? 0,
-                            );
-                          },
-                        ),
+          ),
+          _buildInputField(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessage(Map<String, dynamic> msg) {
+    final isUser = msg['role'] == 'user';
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        constraints: const BoxConstraints(maxWidth: 300),
+        decoration: BoxDecoration(
+          color: isUser ? const Color(0xFF1B6EF3) : const Color(0xFF1B2838),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            Text(
+              msg['text'],
+              style: const TextStyle(color: Colors.white, fontSize: 15),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _formatTime(msg['time']),
+              style: const TextStyle(color: Colors.white38, fontSize: 11),
             ),
           ],
         ),
@@ -182,31 +175,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _sectionTitle(String title, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, color: const Color(0xFF1B6EF3), size: 22),
-        const SizedBox(width: 8),
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-      ],
+  Widget _buildInputField() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      color: const Color(0xFF0A1628),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Напишите, что нужно сделать...',
+                hintStyle: const TextStyle(color: Colors.white38),
+                filled: true,
+                fillColor: const Color(0xFF1B2838),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              onSubmitted: (_) => _sendMessage(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          CircleAvatar(
+            backgroundColor: const Color(0xFF1B6EF3),
+            child: IconButton(
+              icon: const Icon(Icons.send, color: Colors.white, size: 18),
+              onPressed: _sendMessage,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildNoteCard(String title, String content, int id) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: const Icon(Icons.note, color: Color(0xFF1B6EF3)),
-        title: Text(title, style: const TextStyle(color: Colors.white)),
-        subtitle: content.isEmpty
-            ? null
-            : Text(content, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54)),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-          onPressed: () => _deleteNote(id),
-        ),
-      ),
-    );
+  String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+class _LoginRedirect extends StatelessWidget {
+  const _LoginRedirect();
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox();
   }
 }
