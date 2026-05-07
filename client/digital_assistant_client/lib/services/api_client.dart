@@ -111,9 +111,8 @@ class ApiClient {
 
   Future<Map<String, dynamic>?> createTask({
     required String title,
-    String? description,
+    String? content,
     String? project,
-    String? label,
     String? priority,
     String? dueDate,
     List<String>? tags,
@@ -123,9 +122,8 @@ class ApiClient {
       headers: _headers,
       body: jsonEncode({
         'title': title,
-        'description': description ?? '',
+        'description': content ?? '',
         'project': project ?? '',
-        'label': label ?? '',
         'priority': priority ?? 'medium',
         'due_date': dueDate,
         'ai_tags': tags ?? [],
@@ -140,9 +138,8 @@ class ApiClient {
   Future<bool> updateTask({
     required int id,
     required String title,
-    String? description,
+    String? content,
     String? project,
-    String? label,
     String? priority,
     String? dueDate,
     List<String>? tags,
@@ -152,9 +149,8 @@ class ApiClient {
       headers: _headers,
       body: jsonEncode({
         'title': title,
-        'description': description ?? '',
+        'description': content ?? '',
         'project': project ?? '',
-        'label': label ?? '',
         'priority': priority ?? 'medium',
         'due_date': dueDate,
         'ai_tags': tags ?? [],
@@ -183,4 +179,55 @@ class ApiClient {
     }
     return null;
   }
+
+  //Календарь
+  Future<List<dynamic>> getEvents() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/calendar/'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return [];
+  }
+
+  Future<bool> createEvent({
+    required String title,
+    String? content,
+    required String startTime,
+    required String endTime,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/calendar/'),
+      headers: _headers,
+      body: jsonEncode({
+        'title': title,
+        'content': content,
+        'start_time': startTime,
+        'end_time': endTime,
+      }),
+    );
+    return response.statusCode == 201;
+  }
+
+  Future<bool> deleteEvent(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/calendar/$id'),
+      headers: _headers,
+    );
+    return response.statusCode == 204;
+  }
+
+  // Поиск
+  Future<Map<String, dynamic>> search(String query) async {
+      final response = await http.get(
+        Uri.parse('$baseUrl/search/?q=${Uri.encodeComponent(query)}'),
+        headers: _headers,
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return {"query": query, "results": []};
+    }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
-import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   final ApiClient apiClient;

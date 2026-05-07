@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models import Task
 from app.auth import get_current_user
 from app.models import User
+from app.schemas import TaskCreate, TaskResponse
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -15,29 +16,6 @@ router = APIRouter(
     responses={401: {"description": "Unauthorized"}}
 )
 
-class TaskCreate(BaseModel):
-    title: str
-    description: Optional[str] = None
-    project: Optional[str] = None
-    label: Optional[str] = None
-    priority: Optional[str] = None
-    due_date: Optional[str] = None
-    ai_tags: Optional[str] = None
-
-class TaskResponse(BaseModel):
-    id: int
-    user_id: int
-    title: int
-    description: Optional[str] = None
-    project: Optional[str] = None
-    label: Optional[str] = None
-    priority: Optional[str] = None
-    due_date: Optional[str] = None
-    ai_tags: Optional[str] = None
-
-    class Config:
-        from_attributes = True
-
 @router.get("/", response_model=List[TaskResponse])
 def get_tasks(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return db.query(Task).filter(Task.user_id == current_user.id).all()
@@ -45,11 +23,10 @@ def get_tasks(db: Session = Depends(get_db), current_user: User = Depends(get_cu
 @router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(task_data: TaskCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     task = Task(
-        user_id=current_user.id
+        user_id=current_user.id,
         title=task_data.title,
-        description=task_data.description,
+        content=task_data.content,
         project=task_data.project,
-        label=task_data.label,
         priority=task_data.priority,
         due_date=task_data.due_date,
         ai_tags=task_data.ai_tags,

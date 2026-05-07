@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import 'calendar_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final ApiClient apiClient;
@@ -12,7 +13,6 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
-
   late final List<Widget> _pages;
 
   @override
@@ -22,7 +22,189 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _ChatTab(apiClient: widget.apiClient),
       _NotesTab(apiClient: widget.apiClient),
       _TasksTab(apiClient: widget.apiClient),
+      CalendarScreen(apiClient: widget.apiClient),
     ];
+  }
+
+  void _showMoreMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1B2838),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white38,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildMoreItem(Icons.table_chart, 'Таблицы', () {
+              Navigator.pop(ctx);
+              // TODO: экран таблиц
+            }),
+            _buildMoreItem(Icons.map, 'Карты', () {
+              Navigator.pop(ctx);
+              // TODO: экран карт
+            }),
+            _buildMoreItem(Icons.bar_chart, 'Графики', () {
+              Navigator.pop(ctx);
+              // TODO: экран графиков
+            }),
+            _buildMoreItem(Icons.analytics, 'Статистика', () {
+              Navigator.pop(ctx);
+              // TODO: экран статистики
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSearch() {
+    final searchController = TextEditingController();
+
+   showModalBottomSheet(
+     context: context,
+     isScrollControlled: true,
+     backgroundColor: Colors.transparent,
+     builder: (ctx) => StatefulBuilder(
+       builder: (ctx, setSheetState) => DraggableScrollableSheet(
+         initialChildSize: 0.7,
+         maxChildSize: 0.9,
+         minChildSize: 0.5,
+         builder: (ctx, scrollController) => Container(
+           decoration: const BoxDecoration(
+             color: Color(0xFF1B2838),
+             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+           ),
+           child: Column(
+             children: [
+               Padding(
+                 padding: const EdgeInsets.all(16),
+                 child: TextField(
+                   controller: searchController,
+                   autofocus: true,
+                   style: const TextStyle(color: Colors.white),
+                   decoration: InputDecoration(
+                     hintText: 'Поиск по заметкам, задачам...',
+                     hintStyle: const TextStyle(color: Colors.white38),
+                     prefixIcon: const Icon(Icons.search, color: Color(0xFF1B6EF3)),
+                     filled: true,
+                     fillColor: const Color(0xFF0D1B2A),
+                     border: OutlineInputBorder(
+                       borderRadius: BorderRadius.circular(12),
+                       borderSide: BorderSide.none,
+                     ),
+                   ),
+                   onChanged: (value) => setSheetState(() {}),
+                 ),
+               ),
+               Expanded(
+                 child: FutureBuilder<Map<String, dynamic>>(
+                   future: searchController.text.length >= 2
+                       ? widget.apiClient.search(searchController.text)
+                       : Future.value({"results": []}),
+                   builder: (_, snapshot) {
+                     if (searchController.text.length < 2) {
+                       return const Center(
+                         child: Text(
+                           'Введите минимум 2 символа',
+                           style: TextStyle(color: Colors.white54, fontSize: 16),
+                         ),
+                       );
+                     }
+
+                     if (!snapshot.hasData) {
+                       return const Center(child: CircularProgressIndicator());
+                     }
+
+                     final results = snapshot.data?['results'] as List<dynamic>? ?? [];
+
+                     if (results.isEmpty) {
+                       return const Center(
+                         child: Text(
+                           'Ничего не найдено',
+                           style: TextStyle(color: Colors.white54, fontSize: 16),
+                         ),
+                       );
+                     }
+
+                     return ListView.builder(
+                       controller: scrollController,
+                       padding: const EdgeInsets.symmetric(horizontal: 16),
+                       itemCount: results.length,
+                       itemBuilder: (_, i) {
+                         final item = results[i];
+                         final typeIcons = {
+                           'note': Icons.note,
+                           'task': Icons.task_alt,
+                           'event': Icons.calendar_today,
+                         };
+                         final typeLabels = {
+                           'note': 'Заметка',
+                           'task': 'Задача',
+                           'event': 'Событие',
+                         };
+
+                         return Card(
+                           margin: const EdgeInsets.only(bottom: 8),
+                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                           child: ListTile(
+                             leading: Icon(
+                               typeIcons[item['type']] ?? Icons.search,
+                               color: const Color(0xFF1B6EF3),
+                             ),
+                             title: Text(
+                               item['title'] ?? '',
+                               style: const TextStyle(color: Colors.white),
+                             ),
+                             subtitle: Column(
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               children: [
+                                 Text(
+                                   typeLabels[item['type']] ?? item['type'],
+                                   style: const TextStyle(color: Color(0xFF1B6EF3), fontSize: 12),
+                                 ),
+                                 if (item['snippet'] != null && item['snippet'].toString().isNotEmpty)
+                                   Text(
+                                     item['snippet'],
+                                     maxLines: 2,
+                                     overflow: TextOverflow.ellipsis,
+                                     style: const TextStyle(color: Colors.white54, fontSize: 12),
+                                   ),
+                               ],
+                             ),
+                           ),
+                         );
+                       },
+                     );
+                   },
+                 ),
+               ),
+             ],
+           ),
+         ),
+       ),
+     ),
+   );
+  }
+
+  Widget _buildMoreItem(IconData icon, String title, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: const Color(0xFF1B6EF3)),
+      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16)),
+      trailing: const Icon(Icons.chevron_right, color: Colors.white38),
+      onTap: onTap,
+    );
   }
 
   @override
@@ -34,6 +216,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         centerTitle: true,
         backgroundColor: const Color(0xFF0A1628),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search),  // ← ЛУПА
+            onPressed: () => _showSearch(),
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
@@ -48,15 +234,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+        currentIndex: _currentIndex < 4 ? _currentIndex : 4,
+        onTap: (i) {
+          if (i < 4) {
+            setState(() => _currentIndex = i);
+          } else {
+            _showMoreMenu();
+          }
+        },
         backgroundColor: const Color(0xFF0A1628),
         selectedItemColor: const Color(0xFF1B6EF3),
         unselectedItemColor: Colors.white54,
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Чат'),
           BottomNavigationBarItem(icon: Icon(Icons.note), label: 'Заметки'),
           BottomNavigationBarItem(icon: Icon(Icons.task_alt), label: 'Задачи'),
+          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Календарь'),
+          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'Ещё'),
         ],
       ),
     );
@@ -425,7 +620,7 @@ class _TasksTabState extends State<_TasksTab> {
     if (ok == true) {
       await widget.apiClient.createTask(
         title: titleC.text.trim(),
-        description: descC.text.trim(),
+        content: descC.text.trim(),
         project: projectC.text.trim(),
         label: labelC.text.trim(),
       );

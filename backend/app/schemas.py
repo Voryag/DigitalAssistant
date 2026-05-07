@@ -44,3 +44,44 @@ class NoteResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ============ Tasks ============
+class TaskCreate(BaseModel):
+    title: str
+    content: Optional[str] = None
+    project: Optional[str] = None
+    priority: Optional[str] = "medium"
+    due_date: Optional[str] = None
+    ai_tags: Optional[List[str]] = []
+
+class TaskResponse(BaseModel):
+    id: int
+    user_id: int
+    title: int
+    content: Optional[str] = None
+    project: Optional[str] = None
+    priority: Optional[str] = None
+    due_date: Optional[str] = None
+    ai_tags: Optional[List[str]] = []
+
+    class Config:
+        from_attributes = True
+
+# ============ Calendar ============
+class EventCreate(BaseModel):
+    title: str
+    content: Optional[str] = None
+    start_time: str
+    end_time: str
+
+
+class EventResponse(BaseModel):
+    id: int
+    title: str
+    content: Optional[str] = None
+    start_time: str
+    end_time: str
+
+    class Config:
+        from_attributes = True
