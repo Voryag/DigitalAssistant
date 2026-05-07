@@ -49,153 +49,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 20),
             _buildMoreItem(Icons.table_chart, 'Таблицы', () {
               Navigator.pop(ctx);
-              // TODO: экран таблиц
             }),
             _buildMoreItem(Icons.map, 'Карты', () {
               Navigator.pop(ctx);
-              // TODO: экран карт
             }),
             _buildMoreItem(Icons.bar_chart, 'Графики', () {
               Navigator.pop(ctx);
-              // TODO: экран графиков
             }),
             _buildMoreItem(Icons.analytics, 'Статистика', () {
               Navigator.pop(ctx);
-              // TODO: экран статистики
             }),
           ],
         ),
       ),
     );
-  }
-
-  void _showSearch() {
-    final searchController = TextEditingController();
-
-   showModalBottomSheet(
-     context: context,
-     isScrollControlled: true,
-     backgroundColor: Colors.transparent,
-     builder: (ctx) => StatefulBuilder(
-       builder: (ctx, setSheetState) => DraggableScrollableSheet(
-         initialChildSize: 0.7,
-         maxChildSize: 0.9,
-         minChildSize: 0.5,
-         builder: (ctx, scrollController) => Container(
-           decoration: const BoxDecoration(
-             color: Color(0xFF1B2838),
-             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-           ),
-           child: Column(
-             children: [
-               Padding(
-                 padding: const EdgeInsets.all(16),
-                 child: TextField(
-                   controller: searchController,
-                   autofocus: true,
-                   style: const TextStyle(color: Colors.white),
-                   decoration: InputDecoration(
-                     hintText: 'Поиск по заметкам, задачам...',
-                     hintStyle: const TextStyle(color: Colors.white38),
-                     prefixIcon: const Icon(Icons.search, color: Color(0xFF1B6EF3)),
-                     filled: true,
-                     fillColor: const Color(0xFF0D1B2A),
-                     border: OutlineInputBorder(
-                       borderRadius: BorderRadius.circular(12),
-                       borderSide: BorderSide.none,
-                     ),
-                   ),
-                   onChanged: (value) => setSheetState(() {}),
-                 ),
-               ),
-               Expanded(
-                 child: FutureBuilder<Map<String, dynamic>>(
-                   future: searchController.text.length >= 2
-                       ? widget.apiClient.search(searchController.text)
-                       : Future.value({"results": []}),
-                   builder: (_, snapshot) {
-                     if (searchController.text.length < 2) {
-                       return const Center(
-                         child: Text(
-                           'Введите минимум 2 символа',
-                           style: TextStyle(color: Colors.white54, fontSize: 16),
-                         ),
-                       );
-                     }
-
-                     if (!snapshot.hasData) {
-                       return const Center(child: CircularProgressIndicator());
-                     }
-
-                     final results = snapshot.data?['results'] as List<dynamic>? ?? [];
-
-                     if (results.isEmpty) {
-                       return const Center(
-                         child: Text(
-                           'Ничего не найдено',
-                           style: TextStyle(color: Colors.white54, fontSize: 16),
-                         ),
-                       );
-                     }
-
-                     return ListView.builder(
-                       controller: scrollController,
-                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                       itemCount: results.length,
-                       itemBuilder: (_, i) {
-                         final item = results[i];
-                         final typeIcons = {
-                           'note': Icons.note,
-                           'task': Icons.task_alt,
-                           'event': Icons.calendar_today,
-                         };
-                         final typeLabels = {
-                           'note': 'Заметка',
-                           'task': 'Задача',
-                           'event': 'Событие',
-                         };
-
-                         return Card(
-                           margin: const EdgeInsets.only(bottom: 8),
-                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                           child: ListTile(
-                             leading: Icon(
-                               typeIcons[item['type']] ?? Icons.search,
-                               color: const Color(0xFF1B6EF3),
-                             ),
-                             title: Text(
-                               item['title'] ?? '',
-                               style: const TextStyle(color: Colors.white),
-                             ),
-                             subtitle: Column(
-                               crossAxisAlignment: CrossAxisAlignment.start,
-                               children: [
-                                 Text(
-                                   typeLabels[item['type']] ?? item['type'],
-                                   style: const TextStyle(color: Color(0xFF1B6EF3), fontSize: 12),
-                                 ),
-                                 if (item['snippet'] != null && item['snippet'].toString().isNotEmpty)
-                                   Text(
-                                     item['snippet'],
-                                     maxLines: 2,
-                                     overflow: TextOverflow.ellipsis,
-                                     style: const TextStyle(color: Colors.white54, fontSize: 12),
-                                   ),
-                               ],
-                             ),
-                           ),
-                         );
-                       },
-                     );
-                   },
-                 ),
-               ),
-             ],
-           ),
-         ),
-       ),
-     ),
-   );
   }
 
   Widget _buildMoreItem(IconData icon, String title, VoidCallback onTap) {
@@ -204,6 +71,135 @@ class _DashboardScreenState extends State<DashboardScreen> {
       title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16)),
       trailing: const Icon(Icons.chevron_right, color: Colors.white38),
       onTap: onTap,
+    );
+  }
+
+  void _showSearch() {
+    final searchController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          maxChildSize: 0.9,
+          minChildSize: 0.5,
+          builder: (ctx, scrollController) => Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF1B2838),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: TextField(
+                    controller: searchController,
+                    autofocus: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Поиск по заметкам, задачам...',
+                      hintStyle: const TextStyle(color: Colors.white38),
+                      prefixIcon: const Icon(Icons.search, color: Color(0xFF1B6EF3)),
+                      filled: true,
+                      fillColor: const Color(0xFF0D1B2A),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onChanged: (value) => setSheetState(() {}),
+                  ),
+                ),
+                Expanded(
+                  child: FutureBuilder<Map<String, dynamic>>(
+                    future: searchController.text.length >= 2
+                        ? widget.apiClient.search(searchController.text)
+                        : Future.value({"results": []}),
+                    builder: (_, snapshot) {
+                      if (searchController.text.length < 2) {
+                        return const Center(
+                          child: Text(
+                            'Введите минимум 2 символа',
+                            style: TextStyle(color: Colors.white54, fontSize: 16),
+                          ),
+                        );
+                      }
+
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      final results = snapshot.data?['results'] as List<dynamic>? ?? [];
+
+                      if (results.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'Ничего не найдено',
+                            style: TextStyle(color: Colors.white54, fontSize: 16),
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: results.length,
+                        itemBuilder: (_, i) {
+                          final item = results[i];
+                          final typeIcons = {
+                            'note': Icons.note,
+                            'task': Icons.task_alt,
+                            'event': Icons.calendar_today,
+                          };
+                          final typeLabels = {
+                            'note': 'Заметка',
+                            'task': 'Задача',
+                            'event': 'Событие',
+                          };
+
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            child: ListTile(
+                              leading: Icon(
+                                typeIcons[item['type']] ?? Icons.search,
+                                color: const Color(0xFF1B6EF3),
+                              ),
+                              title: Text(
+                                item['title'] ?? '',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    typeLabels[item['type']] ?? item['type'],
+                                    style: const TextStyle(color: Color(0xFF1B6EF3), fontSize: 12),
+                                  ),
+                                  if (item['snippet'] != null && item['snippet'].toString().isNotEmpty)
+                                    Text(
+                                      item['snippet'],
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(color: Colors.white54, fontSize: 12),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -217,7 +213,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: const Color(0xFF0A1628),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),  // ← ЛУПА
+            icon: const Icon(Icons.search),
             onPressed: () => _showSearch(),
           ),
           IconButton(
@@ -258,7 +254,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// ==================== ВКЛАДКА ЧАТ ====================
+// ==================== ЧАТ ====================
 class _ChatTab extends StatefulWidget {
   final ApiClient apiClient;
   const _ChatTab({required this.apiClient});
@@ -302,7 +298,7 @@ class _ChatTabState extends State<_ChatTab> {
         final tags = List<String>.from(aiResult['tags'] ?? []);
 
         if (intent == 'task') {
-          await widget.apiClient.createTask(title: text, tags: tags);
+          await widget.apiClient.createTask(title: text, aiTags: tags);
           reply = '✅ Задача создана${tags.isNotEmpty ? '\n📌 Теги: ${tags.join(", ")}' : ''}';
         } else if (intent == 'note') {
           await widget.apiClient.createNote(text, '', tags);
@@ -426,7 +422,7 @@ class _ChatTabState extends State<_ChatTab> {
   }
 }
 
-// ==================== ВКЛАДКА ЗАМЕТКИ ====================
+// ==================== ЗАМЕТКИ ====================
 class _NotesTab extends StatefulWidget {
   final ApiClient apiClient;
   const _NotesTab({required this.apiClient});
@@ -493,11 +489,16 @@ class _NotesTabState extends State<_NotesTab> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B6EF3)),
-            child: const Text('Создать'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B6EF3)),
+                child: const Text('Создать'),
+              ),
+            ],
           ),
         ],
       ),
@@ -553,7 +554,7 @@ class _NotesTabState extends State<_NotesTab> {
   }
 }
 
-// ==================== ВКЛАДКА ЗАДАЧИ ====================
+// ==================== ЗАДАЧИ ====================
 class _TasksTab extends StatefulWidget {
   final ApiClient apiClient;
   const _TasksTab({required this.apiClient});
@@ -585,33 +586,64 @@ class _TasksTabState extends State<_TasksTab> {
     final titleC = TextEditingController();
     final descC = TextEditingController();
     final projectC = TextEditingController();
-    final labelC = TextEditingController();
 
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1B2838),
         title: const Text('Новая задача', style: TextStyle(color: Colors.white)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _field(titleC, 'Заголовок'),
-              const SizedBox(height: 12),
-              _field(descC, 'Описание', maxLines: 3),
-              const SizedBox(height: 12),
-              _field(projectC, 'Проект'),
-              const SizedBox(height: 12),
-              _field(labelC, 'Метка'),
-            ],
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleC,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Заголовок',
+                labelStyle: TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Color(0xFF0D1B2A),
+                border: OutlineInputBorder(borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descC,
+              style: const TextStyle(color: Colors.white),
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Описание',
+                labelStyle: TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Color(0xFF0D1B2A),
+                border: OutlineInputBorder(borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: projectC,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Проект',
+                labelStyle: TextStyle(color: Colors.white54),
+                filled: true,
+                fillColor: Color(0xFF0D1B2A),
+                border: OutlineInputBorder(borderSide: BorderSide.none),
+              ),
+            ),
+          ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B6EF3)),
-            child: const Text('Создать'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B6EF3)),
+                child: const Text('Создать'),
+              ),
+            ],
           ),
         ],
       ),
@@ -622,7 +654,6 @@ class _TasksTabState extends State<_TasksTab> {
         title: titleC.text.trim(),
         content: descC.text.trim(),
         project: projectC.text.trim(),
-        label: labelC.text.trim(),
       );
       _load();
     }
@@ -631,21 +662,6 @@ class _TasksTabState extends State<_TasksTab> {
   Future<void> _delete(int id) async {
     await widget.apiClient.deleteTask(id);
     _load();
-  }
-
-  Widget _field(TextEditingController c, String label, {int maxLines = 1}) {
-    return TextField(
-      controller: c,
-      maxLines: maxLines,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.white54),
-        filled: true,
-        fillColor: const Color(0xFF0D1B2A),
-        border: const OutlineInputBorder(borderSide: BorderSide.none),
-      ),
-    );
   }
 
   @override
@@ -666,34 +682,140 @@ class _TasksTabState extends State<_TasksTab> {
                   itemCount: _tasks.length,
                   itemBuilder: (_, i) {
                     final task = _tasks[i];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      child: ListTile(
-                        leading: const Icon(Icons.task_alt, color: Color(0xFF1B6EF3)),
-                        title: Text(task['title'] ?? '', style: const TextStyle(color: Colors.white)),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (task['project'] != null && task['project'].toString().isNotEmpty)
-                              Text('Проект: ${task['project']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                            if (task['label'] != null && task['label'].toString().isNotEmpty)
-                              Text('Метка: ${task['label']}', style: const TextStyle(color: Colors.blueAccent, fontSize: 12)),
-                          ],
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                          onPressed: () => _delete(task['id']),
-                        ),
-                      ),
-                    );
+                    return _buildTaskCard(task);
                   },
                 ),
     );
   }
+
+  Widget _buildTaskCard(dynamic task) {
+  final priority = task['priority'] ?? 'medium';
+  final colors = {
+    'easy': Colors.greenAccent,
+    'medium': Colors.orangeAccent,
+    'hard': Colors.redAccent,
+  };
+  final labels = {
+    'easy': 'Easy',
+    'medium': 'Medium',
+    'hard': 'Hard',
+  };
+  final icons = {
+    'easy': Icons.sentiment_satisfied,
+    'medium': Icons.sentiment_neutral,
+    'hard': Icons.sentiment_dissatisfied,
+  };
+
+  return Card(
+    margin: const EdgeInsets.only(bottom: 12),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    color: const Color(0xFF1B2838),
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Заголовок + кнопка GitLab
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  task['title'] ?? '',
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.launch, color: Color(0xFFFC6D26), size: 20),
+                tooltip: 'Отправить в GitLab',
+                onPressed: () async {
+                  final result = await widget.apiClient.exportToGitLab(task['id'], task['title']);
+                  if (result != null && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('✅ Задача создана в GitLab: ${result['gitlab_url']}'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('❌ Ошибка GitLab'), backgroundColor: Colors.red),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+
+          // Проект
+          if (task['project'] != null && task['project'].toString().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text('Проект: ${task['project']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            ),
+
+          // Метка
+          if (task['tags'] != null && task['tags'].toString().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(task['tags'], style: const TextStyle(color: Color(0xFF1B6EF3), fontSize: 13)),
+            ),
+
+          // Описание
+          if (task['content'] != null && task['content'].toString().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(task['content'], maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54)),
+            ),
+
+          // Приоритет + дата + удаление
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Переключатель приоритета
+              Row(
+                children: [
+                  Icon(icons[priority] ?? Icons.help, color: colors[priority], size: 18),
+                  const SizedBox(width: 4),
+                  DropdownButton<String>(
+                    value: priority,
+                    dropdownColor: const Color(0xFF1B2838),
+                    style: TextStyle(color: colors[priority], fontSize: 13),
+                    underline: const SizedBox(),
+                    items: [
+                      DropdownMenuItem(value: 'easy', child: Text('Easy', style: TextStyle(color: Colors.greenAccent))),
+                      DropdownMenuItem(value: 'medium', child: Text('Medium', style: TextStyle(color: Colors.orangeAccent))),
+                      DropdownMenuItem(value: 'hard', child: Text('Hard', style: TextStyle(color: Colors.redAccent))),
+                    ],
+                    onChanged: (v) async {
+                      await widget.apiClient.updateTaskPriority(task['id'], v!);
+                      _load();
+                    },
+                  ),
+                ],
+              ),
+
+              // Дата завершения
+              if (task['due_date'] != null)
+                Text(
+                  'До: ${task['due_date'].toString().substring(0, 10)}',
+                  style: const TextStyle(color: Colors.white38, fontSize: 12),
+                ),
+
+              // Удаление
+              IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+                onPressed: () => _delete(task['id']),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
 }
 
-// ==================== ЗАГЛУШКА РЕДИРЕКТА ====================
+// ==================== ЗАГЛУШКА ====================
 class _LoginRedirect extends StatelessWidget {
   const _LoginRedirect();
   @override

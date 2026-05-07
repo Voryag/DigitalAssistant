@@ -27,12 +27,13 @@ class Task(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     project = Column(String(100))
     title = Column(String(255), nullable=False)
-    content = Column(Text)
+    tags = Column(String(50))                 
+    content = Column(Text)                     
     start_date = Column(Date, server_default=func.current_date())
-    due_date = Column(Date)
+    due_date = Column(Date)                     
     priority = Column(String(20), default="medium")
-    gitlab_issue_id = Column(Integer)
-    gitlab_issue_url = Column(String(500))
+    gitlab_issue_id = Column(Integer)         
+    gitlab_issue_url = Column(String(500))      
     ai_tags = Column(ARRAY(String))
 
 class CalendarEvent(Base):

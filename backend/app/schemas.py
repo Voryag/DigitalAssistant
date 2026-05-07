@@ -46,24 +46,28 @@ class NoteResponse(BaseModel):
         from_attributes = True
 
 
-# ============ Tasks ============
+# ============ TASKS ============
 class TaskCreate(BaseModel):
     title: str
-    content: Optional[str] = None
-    project: Optional[str] = None
+    content: Optional[str] = None    
+    project: Optional[str] = None      
+    tags: Optional[str] = None         
+    due_date: Optional[str] = None     
     priority: Optional[str] = "medium"
-    due_date: Optional[str] = None
-    ai_tags: Optional[List[str]] = []
+
 
 class TaskResponse(BaseModel):
     id: int
     user_id: int
-    title: int
-    content: Optional[str] = None
     project: Optional[str] = None
-    priority: Optional[str] = None
+    title: str
+    tags: Optional[str] = None
+    content: Optional[str] = None
+    start_date: Optional[str] = None
     due_date: Optional[str] = None
-    ai_tags: Optional[List[str]] = []
+    priority: Optional[str] = None
+    gitlab_issue_id: Optional[int] = None
+    gitlab_issue_url: Optional[str] = None
 
     class Config:
         from_attributes = True

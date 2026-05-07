@@ -40,7 +40,7 @@ class _ChatScreenState extends State<ChatScreen> {
         if (intent == 'task') {
           await widget.apiClient.createTask(
             title: text,
-            tags: tags,
+            aiTags: tags,
           );
           reply = '✅ Создал задачу «$text»${tags.isNotEmpty ? '\n📌 Теги: ${tags.join(", ")}' : ''}';
         } else if (intent == 'note') {

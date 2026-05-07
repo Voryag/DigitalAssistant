@@ -113,20 +113,22 @@ class ApiClient {
     required String title,
     String? content,
     String? project,
+    String? tags,
     String? priority,
     String? dueDate,
-    List<String>? tags,
+    List<String>? aiTags,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/tasks/'),
       headers: _headers,
       body: jsonEncode({
         'title': title,
-        'description': content ?? '',
+        'content': content ?? '',
         'project': project ?? '',
+        'tags': tags ?? '',
         'priority': priority ?? 'medium',
         'due_date': dueDate,
-        'ai_tags': tags ?? [],
+        'ai_tags': aiTags?? [],
       }),
     );
     if (response.statusCode == 201) {
@@ -140,16 +142,17 @@ class ApiClient {
     required String title,
     String? content,
     String? project,
+    String? tags,
     String? priority,
     String? dueDate,
-    List<String>? tags,
+    List<String>? aiTags,
   }) async {
     final response = await http.put(
       Uri.parse('$baseUrl/tasks/$id'),
       headers: _headers,
       body: jsonEncode({
         'title': title,
-        'description': content ?? '',
+        'content': content ?? '',
         'project': project ?? '',
         'priority': priority ?? 'medium',
         'due_date': dueDate,
@@ -166,6 +169,33 @@ class ApiClient {
     );
     return response.statusCode == 204;
   }
+
+
+// Обновить приоритет задачи
+Future<bool> updateTaskPriority(int id, String priority) async {
+  final response = await http.put(
+    Uri.parse('$baseUrl/tasks/$id'),
+    headers: _headers,
+    body: jsonEncode({'priority': priority}),
+  );
+  return response.statusCode == 200;
+}
+
+// Отправить задачу в GitLab
+Future<Map<String, dynamic>?> exportToGitLab(int taskId, String title) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/gitlab/create-issue'),
+    headers: _headers,
+    body: jsonEncode({
+      'title': title,
+      'labels': ['digital-assistant'],
+    }),
+  );
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  }
+  return null;
+}
 
   // AI-парсинг
   Future<Map<String, dynamic>?> parseAI(String text) async {
