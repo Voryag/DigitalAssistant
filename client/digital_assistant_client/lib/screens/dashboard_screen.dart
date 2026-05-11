@@ -47,18 +47,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildMoreItem(Icons.table_chart, 'Таблицы', () {
-              Navigator.pop(ctx);
-            }),
-            _buildMoreItem(Icons.map, 'Карты', () {
-              Navigator.pop(ctx);
-            }),
-            _buildMoreItem(Icons.bar_chart, 'Графики', () {
-              Navigator.pop(ctx);
-            }),
-            _buildMoreItem(Icons.analytics, 'Статистика', () {
-              Navigator.pop(ctx);
-            }),
+            _buildMoreItem(Icons.table_chart, 'Таблицы', () => Navigator.pop(ctx)),
+            _buildMoreItem(Icons.map, 'Карты', () => Navigator.pop(ctx)),
+            _buildMoreItem(Icons.bar_chart, 'Графики', () => Navigator.pop(ctx)),
+            _buildMoreItem(Icons.analytics, 'Статистика', () => Navigator.pop(ctx)),
           ],
         ),
       ),
@@ -586,66 +578,113 @@ class _TasksTabState extends State<_TasksTab> {
     final titleC = TextEditingController();
     final descC = TextEditingController();
     final projectC = TextEditingController();
+    final tagsC = TextEditingController();
+    DateTime? dueDate;
 
     final ok = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1B2838),
-        title: const Text('Новая задача', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleC,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Заголовок',
-                labelStyle: TextStyle(color: Colors.white54),
-                filled: true,
-                fillColor: Color(0xFF0D1B2A),
-                border: OutlineInputBorder(borderSide: BorderSide.none),
-              ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF1B2838),
+          title: const Text('Новая задача', style: TextStyle(color: Colors.white)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleC,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Заголовок',
+                    labelStyle: TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: Color(0xFF0D1B2A),
+                    border: OutlineInputBorder(borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descC,
+                  style: const TextStyle(color: Colors.white),
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Описание',
+                    labelStyle: TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: Color(0xFF0D1B2A),
+                    border: OutlineInputBorder(borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: projectC,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Проект',
+                    labelStyle: TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: Color(0xFF0D1B2A),
+                    border: OutlineInputBorder(borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: tagsC,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Метка (#срочно)',
+                    labelStyle: TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: Color(0xFF0D1B2A),
+                    border: OutlineInputBorder(borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    dueDate == null
+                        ? 'Дата завершения (не выбрана)'
+                        : 'Дата завершения: ${dueDate!.day}.${dueDate!.month}.${dueDate!.year}',
+                    style: const TextStyle(color: Colors.white54, fontSize: 14),
+                  ),
+                  trailing: const Icon(Icons.calendar_today, color: Color(0xFF1B6EF3)),
+                  onTap: () async {
+                    final d = await showDatePicker(
+                      context: ctx,
+                      initialDate: DateTime.now().add(const Duration(days: 1)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2030),
+                      builder: (ctx, child) => Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.dark(
+                            primary: Color(0xFF1B6EF3),
+                            surface: Color(0xFF1B2838),
+                          ),
+                        ),
+                        child: child!,
+                      ),
+                    );
+                    if (d != null) setDialogState(() => dueDate = d);
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: descC,
-              style: const TextStyle(color: Colors.white),
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Описание',
-                labelStyle: TextStyle(color: Colors.white54),
-                filled: true,
-                fillColor: Color(0xFF0D1B2A),
-                border: OutlineInputBorder(borderSide: BorderSide.none),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: projectC,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Проект',
-                labelStyle: TextStyle(color: Colors.white54),
-                filled: true,
-                fillColor: Color(0xFF0D1B2A),
-                border: OutlineInputBorder(borderSide: BorderSide.none),
-              ),
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B6EF3)),
+                  child: const Text('Создать'),
+                ),
+              ],
             ),
           ],
         ),
-        actions: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B6EF3)),
-                child: const Text('Создать'),
-              ),
-            ],
-          ),
-        ],
       ),
     );
 
@@ -654,6 +693,8 @@ class _TasksTabState extends State<_TasksTab> {
         title: titleC.text.trim(),
         content: descC.text.trim(),
         project: projectC.text.trim(),
+        tags: tagsC.text.trim(),
+        dueDate: dueDate?.toIso8601String(),
       );
       _load();
     }
@@ -662,6 +703,133 @@ class _TasksTabState extends State<_TasksTab> {
   Future<void> _delete(int id) async {
     await widget.apiClient.deleteTask(id);
     _load();
+  }
+
+  Widget _buildTaskCard(dynamic task) {
+    final priority = task['priority'] ?? 'medium';
+    final colors = {
+      'easy': Colors.greenAccent,
+      'medium': Colors.orangeAccent,
+      'hard': Colors.redAccent,
+    };
+    final icons = {
+      'easy': Icons.sentiment_satisfied,
+      'medium': Icons.sentiment_neutral,
+      'hard': Icons.sentiment_dissatisfied,
+    };
+    final aiTags = task['ai_tags'] as List<dynamic>? ?? [];
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: const Color(0xFF1B2838),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    task['title'] ?? '',
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.launch, color: Color(0xFFFC6D26), size: 20),
+                  tooltip: 'Отправить в GitLab',
+                  onPressed: () async {
+                    final result = await widget.apiClient.exportToGitLab(task['id'], task['title']);
+                    if (result != null && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('✅ Задача в GitLab: ${result['gitlab_url']}'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('❌ Ошибка GitLab'), backgroundColor: Colors.red),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+            if (task['project'] != null && task['project'].toString().isNotEmpty)
+              Text('Проект: ${task['project']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            if (task['tags'] != null && task['tags'].toString().isNotEmpty)
+              Text(task['tags'], style: const TextStyle(color: Color(0xFF1B6EF3), fontSize: 13)),
+            if (aiTags.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 4),
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: aiTags.map((tag) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1B6EF3).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      tag.toString(),
+                      style: const TextStyle(color: Color(0xFF1B6EF3), fontSize: 11),
+                    ),
+                  )).toList(),
+                ),
+              ),
+            if (task['content'] != null && task['content'].toString().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(task['content'], maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54)),
+              ),
+            Row(
+              children: [
+                if (task['start_date'] != null)
+                  Text('С: ${task['start_date'].toString().substring(0, 10)}', style: const TextStyle(color: Colors.white38, fontSize: 11)),
+                if (task['start_date'] != null && task['due_date'] != null)
+                  const Text('  ', style: TextStyle(color: Colors.white38, fontSize: 11)),
+                if (task['due_date'] != null)
+                  Text('До: ${task['due_date'].toString().substring(0, 10)}', style: const TextStyle(color: Colors.white38, fontSize: 11)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(icons[priority] ?? Icons.help, color: colors[priority], size: 18),
+                    const SizedBox(width: 4),
+                    DropdownButton<String>(
+                      value: priority,
+                      dropdownColor: const Color(0xFF1B2838),
+                      style: TextStyle(color: colors[priority], fontSize: 13),
+                      underline: const SizedBox(),
+                      items: [
+                        DropdownMenuItem(value: 'easy', child: Text('Easy', style: TextStyle(color: Colors.greenAccent))),
+                        DropdownMenuItem(value: 'medium', child: Text('Medium', style: TextStyle(color: Colors.orangeAccent))),
+                        DropdownMenuItem(value: 'hard', child: Text('Hard', style: TextStyle(color: Colors.redAccent))),
+                      ],
+                      onChanged: (v) async {
+                        await widget.apiClient.updateTaskPriority(task['id'], v!);
+                        _load();
+                      },
+                    ),
+                  ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+                  onPressed: () => _delete(task['id']),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -680,139 +848,10 @@ class _TasksTabState extends State<_TasksTab> {
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: _tasks.length,
-                  itemBuilder: (_, i) {
-                    final task = _tasks[i];
-                    return _buildTaskCard(task);
-                  },
+                  itemBuilder: (_, i) => _buildTaskCard(_tasks[i]),
                 ),
     );
   }
-
-  Widget _buildTaskCard(dynamic task) {
-  final priority = task['priority'] ?? 'medium';
-  final colors = {
-    'easy': Colors.greenAccent,
-    'medium': Colors.orangeAccent,
-    'hard': Colors.redAccent,
-  };
-  final labels = {
-    'easy': 'Easy',
-    'medium': 'Medium',
-    'hard': 'Hard',
-  };
-  final icons = {
-    'easy': Icons.sentiment_satisfied,
-    'medium': Icons.sentiment_neutral,
-    'hard': Icons.sentiment_dissatisfied,
-  };
-
-  return Card(
-    margin: const EdgeInsets.only(bottom: 12),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    color: const Color(0xFF1B2838),
-    child: Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Заголовок + кнопка GitLab
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  task['title'] ?? '',
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.launch, color: Color(0xFFFC6D26), size: 20),
-                tooltip: 'Отправить в GitLab',
-                onPressed: () async {
-                  final result = await widget.apiClient.exportToGitLab(task['id'], task['title']);
-                  if (result != null && mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('✅ Задача создана в GitLab: ${result['gitlab_url']}'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('❌ Ошибка GitLab'), backgroundColor: Colors.red),
-                    );
-                  }
-                },
-              ),
-            ],
-          ),
-
-          // Проект
-          if (task['project'] != null && task['project'].toString().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text('Проект: ${task['project']}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
-            ),
-
-          // Метка
-          if (task['tags'] != null && task['tags'].toString().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(task['tags'], style: const TextStyle(color: Color(0xFF1B6EF3), fontSize: 13)),
-            ),
-
-          // Описание
-          if (task['content'] != null && task['content'].toString().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(task['content'], maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white54)),
-            ),
-
-          // Приоритет + дата + удаление
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Переключатель приоритета
-              Row(
-                children: [
-                  Icon(icons[priority] ?? Icons.help, color: colors[priority], size: 18),
-                  const SizedBox(width: 4),
-                  DropdownButton<String>(
-                    value: priority,
-                    dropdownColor: const Color(0xFF1B2838),
-                    style: TextStyle(color: colors[priority], fontSize: 13),
-                    underline: const SizedBox(),
-                    items: [
-                      DropdownMenuItem(value: 'easy', child: Text('Easy', style: TextStyle(color: Colors.greenAccent))),
-                      DropdownMenuItem(value: 'medium', child: Text('Medium', style: TextStyle(color: Colors.orangeAccent))),
-                      DropdownMenuItem(value: 'hard', child: Text('Hard', style: TextStyle(color: Colors.redAccent))),
-                    ],
-                    onChanged: (v) async {
-                      await widget.apiClient.updateTaskPriority(task['id'], v!);
-                      _load();
-                    },
-                  ),
-                ],
-              ),
-
-              // Дата завершения
-              if (task['due_date'] != null)
-                Text(
-                  'До: ${task['due_date'].toString().substring(0, 10)}',
-                  style: const TextStyle(color: Colors.white38, fontSize: 12),
-                ),
-
-              // Удаление
-              IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
-                onPressed: () => _delete(task['id']),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-}
 }
 
 // ==================== ЗАГЛУШКА ====================

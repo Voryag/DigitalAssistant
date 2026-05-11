@@ -173,8 +173,8 @@ class ApiClient {
 
 // Обновить приоритет задачи
 Future<bool> updateTaskPriority(int id, String priority) async {
-  final response = await http.put(
-    Uri.parse('$baseUrl/tasks/$id'),
+  final response = await http.patch(
+    Uri.parse('$baseUrl/tasks/$id/priority'),
     headers: _headers,
     body: jsonEncode({'priority': priority}),
   );
@@ -260,4 +260,33 @@ Future<Map<String, dynamic>?> exportToGitLab(int taskId, String title) async {
       }
       return {"query": query, "results": []};
     }
+
+  //Статистика для дашборда
+  Future<Map<String, dynamic>> getDashboardStats() async {
+    final notes = await getNotes();
+    final tasks = await getTasks();
+    final events = await getEvents();
+
+    final now = DateTime.now();
+    final todayEvents = events.where((e) {
+      final start = DateTime.parse(e['start_time']);
+      return start.year == now.year && start.month == now.month && start.day == now.day;
+    }).length;
+
+    final tasksByPriority = {'easy': 0, 'medium': 0, 'hard': 0};
+    for (var t in tasks) {
+      final p = t['priority'] ?? 'medium';
+      tasksByPriority[p] = (tasksByPriority[p] ?? 0) + 1;
+    }
+
+    return {
+      'total_notes': notes.length,
+      'total_tasks': tasks.length,
+      'total_events': events.length,
+      'today_events': todayEvents,
+      'tasks_easy': tasksByPriority['easy'] ?? 0,
+      'tasks_medium': tasksByPriority['medium'] ?? 0,
+      'tasks_hard': tasksByPriority['hard'] ?? 0,
+    };
+  }
 }
