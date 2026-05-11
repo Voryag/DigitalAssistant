@@ -89,3 +89,20 @@ class EventResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ============ Route ============
+class RouteCreate(BaseModel):
+    name: str
+    start_point: str
+    end_point: str
+
+
+class RouteResponse(BaseModel):
+    id: int
+    name: str
+    start_point: str
+    end_point: str
+
+    class Config:
+        from_attributes = True

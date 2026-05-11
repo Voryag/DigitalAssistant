@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_client.dart';
 import 'calendar_screen.dart';
 import 'stats_screen.dart';
+import 'map_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final ApiClient apiClient;
@@ -49,7 +50,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 20),
             _buildMoreItem(Icons.table_chart, 'Таблицы', () => Navigator.pop(ctx)),
-            _buildMoreItem(Icons.map, 'Карты', () => Navigator.pop(ctx)),
+            _buildMoreItem(Icons.map, 'Карты', () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => MapsScreen(apiClient: widget.apiClient)),
+                );
+              }),
             _buildMoreItem(Icons.bar_chart, 'Графики', () => Navigator.pop(ctx)),
             _buildMoreItem(
               Icons.analytics, 'Статистика', () {

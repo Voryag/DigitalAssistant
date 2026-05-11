@@ -289,4 +289,38 @@ Future<Map<String, dynamic>?> exportToGitLab(int taskId, String title) async {
       'tasks_hard': tasksByPriority['hard'] ?? 0,
     };
   }
+
+  // Получить маршруты
+  Future<List<dynamic>> getRoutes() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/routes/'),
+      headers: _headers,
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return [];
+  }
+  
+  // Сохранить маршрут
+  Future<void> saveRoute(String start, String end) async {
+    await http.post(
+      Uri.parse('$baseUrl/routes/'),
+      headers: _headers,
+      body: jsonEncode({
+        'name': '$start → $end',
+        'start_point': start,
+        'end_point': end,
+      }),
+    );
+  }
+  
+  // Удалить маршрут
+  Future<bool> deleteRoute(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/routes/$id'),
+      headers: _headers,
+    );
+    return response.statusCode == 204;
+  }
 }
