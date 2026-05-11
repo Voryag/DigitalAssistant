@@ -44,7 +44,7 @@ def search(
             "type": "task",
             "id": task.id,
             "title": task.title,
-            "snippet": (task.description or "")[:100],
+            "snippet": (task.content or "")[:100],
         })
 
     # Поиск по календарю

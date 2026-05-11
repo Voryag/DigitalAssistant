@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
 import 'calendar_screen.dart';
+import 'stats_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final ApiClient apiClient;
@@ -50,7 +51,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildMoreItem(Icons.table_chart, 'Таблицы', () => Navigator.pop(ctx)),
             _buildMoreItem(Icons.map, 'Карты', () => Navigator.pop(ctx)),
             _buildMoreItem(Icons.bar_chart, 'Графики', () => Navigator.pop(ctx)),
-            _buildMoreItem(Icons.analytics, 'Статистика', () => Navigator.pop(ctx)),
+            _buildMoreItem(
+              Icons.analytics, 'Статистика', () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => StatsScreen(apiClient: widget.apiClient)),
+                );
+              }),
           ],
         ),
       ),
@@ -484,11 +492,20 @@ class _NotesTabState extends State<_NotesTab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Отмена', style: TextStyle(color: Colors.white70, fontSize: 15)),
+              ),
+              const SizedBox(width: 20),
               ElevatedButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B6EF3)),
-                child: const Text('Создать'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1B6EF3),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('Создать', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               ),
             ],
           ),
@@ -675,11 +692,20 @@ class _TasksTabState extends State<_TasksTab> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Отмена', style: TextStyle(color: Colors.white70, fontSize: 15)),
+                ),
+                const SizedBox(width: 20),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(ctx, true),
-                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B6EF3)),
-                  child: const Text('Создать'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1B6EF3),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('Создать', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
