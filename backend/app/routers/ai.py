@@ -15,11 +15,29 @@ router = APIRouter(
 class ParseRequest(BaseModel):
     text: str
 
+class ParseRequest(BaseModel):
+    text: str
+
+
 class ParseResponse(BaseModel):
     intent: str
-    tags: List[str]
+    title: str
+    content: str
+    project: str
+    tags: str
+    priority: str
+    due_date: str
+
 
 @router.post("/parse", response_model=ParseResponse)
-async def parse_text(request: ParseRequest):
+def parse_text(request: ParseRequest):
     result = parse_user_request(request.text)
-    return ParseResponse(intent=result["intent"], tags=result["tags"])
+    return ParseResponse(
+        intent=result["intent"],
+        title=result["title"],
+        content=result["content"],
+        project=result["project"],
+        tags=result["tags"],
+        priority=result["priority"],
+        due_date=result["due_date"],
+    )

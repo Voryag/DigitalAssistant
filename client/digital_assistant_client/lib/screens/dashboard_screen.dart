@@ -291,39 +291,54 @@ class _ChatTabState extends State<_ChatTab> {
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
-
+  
     _addMessage('user', text);
     _messageController.clear();
     setState(() => _loading = true);
-
+  
     try {
-      final aiResult = await widget.apiClient.parseAI(text);
-      String reply;
+    final aiResult = await widget.apiClient.parseAI(text);
+    String reply;
 
-      if (aiResult != null) {
-        final intent = aiResult['intent'] ?? 'note';
-        final tags = List<String>.from(aiResult['tags'] ?? []);
+    if (aiResult != null) {
+      final intent = aiResult['intent'] ?? 'note';
+      final title = aiResult['title'] ?? text;
+      final content = aiResult['content'] ?? '';
+      final project = aiResult['project'] ?? '';
+      final tags = aiResult['tags'] ?? '';
+      final priority = aiResult['priority'] ?? 'medium';
+      final dueDate = aiResult['due_date'] ?? '';
 
-        if (intent == 'task') {
-          await widget.apiClient.createTask(title: text, aiTags: tags);
-          reply = '✅ Задача создана${tags.isNotEmpty ? '\n📌 Теги: ${tags.join(", ")}' : ''}';
-        } else if (intent == 'note') {
-          await widget.apiClient.createNote(text, '', tags);
-          reply = '📝 Заметка сохранена${tags.isNotEmpty ? '\n📌 Теги: ${tags.join(", ")}' : ''}';
-        } else if (intent == 'calendar') {
-          reply = '📅 Добавил в календарь: $text';
-        } else {
-          reply = '💡 $text';
-        }
+      if (intent == 'task') {
+        await widget.apiClient.createTask(
+          title: title,
+          content: content,
+          project: project,
+          tags: tags,
+          priority: priority,
+          dueDate: dueDate.isNotEmpty ? dueDate : null,
+        );
+        reply = '✅ Задача создана: "$title"'
+            '${project.isNotEmpty ? '\n📁 Проект: $project' : ''}'
+            '${tags.isNotEmpty ? '\n🏷️ $tags' : ''}'
+            '${dueDate.isNotEmpty ? '\n📅 До: $dueDate' : ''}';
+      } else if (intent == 'note') {
+        await widget.apiClient.createNote(title, content, []);
+        reply = '📝 Заметка сохранена: "$title"';
+      } else if (intent == 'calendar') {
+        reply = '📅 Добавил в календарь: "$title"';
       } else {
-        reply = '⚠️ Не удалось обработать запрос';
+        reply = '💡 "$title"';
       }
-
-      _addMessage('assistant', reply);
-    } catch (e) {
-      _addMessage('assistant', '❌ Ошибка соединения');
+    } else {
+      reply = '⚠️ Не удалось обработать запрос';
     }
 
+    _addMessage('assistant', reply);
+    } catch (e) {
+    _addMessage('assistant', '❌ Ошибка соединения');
+    }
+  
     setState(() => _loading = false);
     _scrollDown();
   }

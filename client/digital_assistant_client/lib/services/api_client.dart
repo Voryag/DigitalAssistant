@@ -199,15 +199,15 @@ Future<Map<String, dynamic>?> exportToGitLab(int taskId, String title) async {
 
   // AI-парсинг
   Future<Map<String, dynamic>?> parseAI(String text) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/ai/parse'),
-      headers: _headers,
-      body: jsonEncode({'text': text}),
-    );
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
-    return null;
+  final response = await http.post(
+    Uri.parse('$baseUrl/ai/parse'),
+    headers: _headers,
+    body: jsonEncode({'text': text}),
+  );
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  }
+  return null;
   }
 
   //Календарь
@@ -301,7 +301,7 @@ Future<Map<String, dynamic>?> exportToGitLab(int taskId, String title) async {
     }
     return [];
   }
-  
+
   // Сохранить маршрут
   Future<void> saveRoute(String start, String end) async {
     await http.post(
@@ -314,7 +314,7 @@ Future<Map<String, dynamic>?> exportToGitLab(int taskId, String title) async {
       }),
     );
   }
-  
+
   // Удалить маршрут
   Future<bool> deleteRoute(int id) async {
     final response = await http.delete(
