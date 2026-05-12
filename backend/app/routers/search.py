@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from sqlalchemy import String
 
 from app.database import get_db
 from app.models import Note, Task, CalendarEvent, User
@@ -13,6 +13,7 @@ router = APIRouter(
     responses={401: {"description": "Unauthorized"}}
 )
 
+
 @router.get("/")
 def search(
     q: str = Query(..., min_length=1),
@@ -20,11 +21,16 @@ def search(
     current_user: User = Depends(get_current_user),
 ):
     results = []
+    query = f"%{q}%"
 
     # Поиск по заметкам
     notes = db.query(Note).filter(
         Note.user_id == current_user.id,
-        (Note.title.ilike(f"%{q}%")) | (Note.content.ilike(f"%{q}%"))
+        (
+            Note.title.ilike(query) |
+            Note.content.ilike(query) |
+            Note.ai_tags.cast(String).ilike(query)
+        )
     ).all()
     for note in notes:
         results.append({
@@ -37,7 +43,12 @@ def search(
     # Поиск по задачам
     tasks = db.query(Task).filter(
         Task.user_id == current_user.id,
-        (Task.title.ilike(f"%{q}%")) | (Task.content.ilike(f"%{q}%"))
+        (
+            Task.title.ilike(query) |
+            Task.content.ilike(query) |
+            Task.tags.ilike(query) |
+            Task.ai_tags.cast(String).ilike(query)
+        )
     ).all()
     for task in tasks:
         results.append({
@@ -50,14 +61,18 @@ def search(
     # Поиск по календарю
     events = db.query(CalendarEvent).filter(
         CalendarEvent.user_id == current_user.id,
-        CalendarEvent.title.ilike(f"%{q}%")
+        (
+            CalendarEvent.title.ilike(query) |
+            CalendarEvent.content.ilike(query) |
+            CalendarEvent.ai_tags.cast(String).ilike(query)
+        )
     ).all()
     for event in events:
         results.append({
             "type": "event",
             "id": event.id,
             "title": event.title,
-            "snippet": event.start_time.isoformat(),
+            "snippet": event.start_time.isoformat() if event.start_time else "",
         })
 
     return {"query": q, "results": results}
