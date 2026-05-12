@@ -65,7 +65,8 @@ class Sheet(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    columns = Column(JSONB)
+    title = Column(String(255), nullable=False)
+    headers = Column(JSONB)
     rows = Column(JSONB)
     google_sheet_id = Column(String(255))
     google_sheet_url = Column(String(500))

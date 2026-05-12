@@ -199,15 +199,13 @@ Future<Map<String, dynamic>?> exportToGitLab(int taskId, String title) async {
 
   // AI-парсинг
   Future<Map<String, dynamic>?> parseAI(String text) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/ai/parse'),
-    headers: _headers,
-    body: jsonEncode({'text': text}),
-  );
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body);
-  }
-  return null;
+    final response = await http.post(
+      Uri.parse('$baseUrl/ai/parse'),
+      headers: _headers,
+      body: jsonEncode({'text': text}),
+    );
+    if (response.statusCode == 200) return jsonDecode(response.body);
+    return null;
   }
 
   //Календарь
@@ -233,7 +231,7 @@ Future<Map<String, dynamic>?> exportToGitLab(int taskId, String title) async {
       headers: _headers,
       body: jsonEncode({
         'title': title,
-        'content': content,
+        'content': content ?? '',
         'start_time': startTime,
         'end_time': endTime,
       }),
@@ -321,6 +319,37 @@ Future<Map<String, dynamic>?> exportToGitLab(int taskId, String title) async {
       Uri.parse('$baseUrl/routes/$id'),
       headers: _headers,
     );
+    return response.statusCode == 204;
+  }
+
+  //Создание таблиц
+  Future<List<dynamic>> getSheets() async {
+  final response = await http.get(Uri.parse('$baseUrl/sheets/'), headers: _headers);
+  if (response.statusCode == 200) return jsonDecode(response.body);
+  return [];
+  }
+
+  Future<Map<String, dynamic>?> createSheet(String title, List<String> headers, List<List<dynamic>> rows) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/sheets/'),
+      headers: _headers,
+      body: jsonEncode({'title': title, 'headers': headers, 'rows': rows}),
+    );
+    if (response.statusCode == 201) return jsonDecode(response.body);
+    return null;
+  }
+
+  Future<bool> addRowToSheet(int id, List<String> values) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/sheets/$id/rows'),
+      headers: _headers,
+      body: jsonEncode({'values': values}),
+    );
+    return response.statusCode == 200;
+  }
+
+  Future<bool> deleteSheet(int id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/sheets/$id'), headers: _headers);
     return response.statusCode == 204;
   }
 }

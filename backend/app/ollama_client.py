@@ -26,25 +26,26 @@ def parse_user_request(text: str) -> dict:
 - due_date: дата завершения задачи в формате YYYY-MM-DD (если указана)
 - start_time: время начала события в формате HH:MM (ТОЛЬКО для calendar)
 - end_time: время окончания в формате HH:MM (ТОЛЬКО для calendar, по умолчанию +1 час)
+- ai_tags: список из 2-4 ключевых слов для поиска (на русском)
 
 Примеры:
-Запрос: "Срочно купить хлеб завтра"
-Ответ: {{"intent":"task","title":"Купить хлеб","content":"","project":"дом","tags":"#срочно","priority":"hard","due_date":"{tomorrow}","start_time":"","end_time":""}}
+Запрос: "Купить хлеб завтра"
+Ответ: {{"intent":"task","title":"Купить хлеб","content":"","project":"дом","tags":"#Покупки","priority":"medium","due_date":"2026-05-13","start_time":"","end_time":"","ai_tags":["покупки","продукты"]}}
 
 Запрос: "Встреча с командой в пятницу в 15:00"
-Ответ: {{"intent":"calendar","title":"Встреча с командой","content":"","project":"работа","tags":"","priority":"medium","due_date":"","start_time":"15:00","end_time":"16:00"}}
+Ответ: {{"intent":"calendar","title":"Встреча с командой","content":"","project":"работа","tags":"","priority":"medium","due_date":"","start_time":"15:00","end_time":"16:00","ai_tags":["встреча","команда","работа"]}}
 
 Запрос: "День рождения мамы 20 июня, не забыть поздравить"
-Ответ: {{"intent":"calendar","title":"День рождения мамы","content":"Не забыть поздравить","project":"","tags":"#важно","priority":"hard","due_date":"","start_time":"09:00","end_time":"10:00"}}
+Ответ: {{"intent":"calendar","title":"День рождения мамы","content":"Не забыть поздравить","project":"","tags":"#важно","priority":"hard","due_date":"","start_time":"09:00","end_time":"10:00","ai_tags":["праздник","семья","поздравление"]}}
 
 Запрос: "Записаться к врачу на послезавтра на 11 утра"
-Ответ: {{"intent":"calendar","title":"Запись к врачу","content":"","project":"","tags":"","priority":"medium","due_date":"","start_time":"11:00","end_time":"12:00"}}
+Ответ: {{"intent":"calendar","title":"Запись к врачу","content":"","project":"","tags":"","priority":"medium","due_date":"","start_time":"11:00","end_time":"12:00","ai_tags":["здоровье","врач","приём"]}}
 
 Запрос: "Созвон с заказчиком завтра в 14:00 по поводу проекта БСК"
-Ответ: {{"intent":"calendar","title":"Созвон с заказчиком","content":"По поводу проекта БСК","project":"БСК","tags":"#важно","priority":"hard","due_date":"","start_time":"14:00","end_time":"15:00"}}
+Ответ: {{"intent":"calendar","title":"Созвон с заказчиком","content":"По поводу проекта БСК","project":"БСК","tags":"#важно","priority":"hard","due_date":"","start_time":"14:00","end_time":"15:00","ai_tags":["звонок","заказчик","БСК"]}}
 
 Запрос: "Идея для стартапа"
-Ответ: {{"intent":"note","title":"Идея для стартапа","content":"","project":"","tags":"","priority":"medium","due_date":"","start_time":"","end_time":""}}
+Ответ: {{"intent":"note","title":"Идея для стартапа","content":"","project":"","tags":"","priority":"medium","due_date":"","start_time":"","end_time":"","ai_tags":["идея","стартап","бизнес"]}}
 
 Запрос: "{text}"
 JSON:"""
@@ -83,6 +84,7 @@ JSON:"""
                 "due_date": result.get("due_date", ""),
                 "start_time": result.get("start_time", ""),
                 "end_time": result.get("end_time", ""),
+                "ai_tags": result.get("ai_tags", []),
             }
 
         return _default_response(text)
@@ -103,4 +105,5 @@ def _default_response(text: str) -> dict:
         "due_date": "",
         "start_time": "",
         "end_time": "",
+        "ai_tags": "",
     }

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.models import User, Note, Task, CalendarEvent, MapRoute, Sheet
-from app.routers import auth_router, notes, gitlab_test, ai, tasks, calendar, search, routes
+from app.routers import auth_router, notes, gitlab_test, ai, tasks, calendar, search, routes, sheets
 
 Base.metadata.create_all(bind=engine)
 
@@ -25,6 +25,7 @@ app.include_router(tasks.router)
 app.include_router(calendar.router)
 app.include_router(search.router)
 app.include_router(routes.router)
+app.include_router(sheets.router)
 
 
 @app.get("/")

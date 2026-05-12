@@ -27,6 +27,7 @@ class ParseResponse(BaseModel):
     tags: str
     priority: str
     due_date: str
+    ai_tags: list[str] = []
 
 
 @router.post("/parse", response_model=ParseResponse)
@@ -40,4 +41,7 @@ def parse_text(request: ParseRequest):
         tags=result["tags"],
         priority=result["priority"],
         due_date=result["due_date"],
+        start_time=result.get("start_time", ""),
+        end_time=result.get("end_time", ""),
+        ai_tags=result.get("ai_tags", []),
     )

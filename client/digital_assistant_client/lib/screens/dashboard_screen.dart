@@ -3,6 +3,7 @@ import '../services/api_client.dart';
 import 'calendar_screen.dart';
 import 'stats_screen.dart';
 import 'map_screen.dart';
+import 'sheet_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final ApiClient apiClient;
@@ -49,7 +50,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildMoreItem(Icons.table_chart, 'Таблицы', () => Navigator.pop(ctx)),
+            _buildMoreItem(Icons.table_chart, 'Таблицы', () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => SheetsScreen(apiClient: widget.apiClient)),
+              );
+            }),
             _buildMoreItem(Icons.map, 'Карты', () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -57,7 +64,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   MaterialPageRoute(builder: (_) => MapsScreen(apiClient: widget.apiClient)),
                 );
               }),
-            _buildMoreItem(Icons.bar_chart, 'Графики', () => Navigator.pop(ctx)),
             _buildMoreItem(
               Icons.analytics, 'Статистика', () {
                 Navigator.pop(ctx);
@@ -291,54 +297,84 @@ class _ChatTabState extends State<_ChatTab> {
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
-  
+
     _addMessage('user', text);
     _messageController.clear();
     setState(() => _loading = true);
-  
+
     try {
-    final aiResult = await widget.apiClient.parseAI(text);
-    String reply;
+      final aiResult = await widget.apiClient.parseAI(text);
+      String reply;
 
-    if (aiResult != null) {
-      final intent = aiResult['intent'] ?? 'note';
-      final title = aiResult['title'] ?? text;
-      final content = aiResult['content'] ?? '';
-      final project = aiResult['project'] ?? '';
-      final tags = aiResult['tags'] ?? '';
-      final priority = aiResult['priority'] ?? 'medium';
-      final dueDate = aiResult['due_date'] ?? '';
+      if (aiResult != null) {
+        final intent = aiResult['intent'] ?? 'note';
+        final title = aiResult['title'] ?? text;
+        final content = aiResult['content'] ?? '';
+        final project = aiResult['project'] ?? '';
+        final tags = aiResult['tags'] ?? '';
+        final priority = aiResult['priority'] ?? 'medium';
+        final dueDate = aiResult['due_date'] ?? '';
+        final startTime = aiResult['start_time'] ?? '';
+        final endTime = aiResult['end_time'] ?? '';
 
-      if (intent == 'task') {
-        await widget.apiClient.createTask(
-          title: title,
-          content: content,
-          project: project,
-          tags: tags,
-          priority: priority,
-          dueDate: dueDate.isNotEmpty ? dueDate : null,
-        );
-        reply = '✅ Задача создана: "$title"'
-            '${project.isNotEmpty ? '\n📁 Проект: $project' : ''}'
-            '${tags.isNotEmpty ? '\n🏷️ $tags' : ''}'
-            '${dueDate.isNotEmpty ? '\n📅 До: $dueDate' : ''}';
-      } else if (intent == 'note') {
-        await widget.apiClient.createNote(title, content, []);
-        reply = '📝 Заметка сохранена: "$title"';
-      } else if (intent == 'calendar') {
-        reply = '📅 Добавил в календарь: "$title"';
+        if (intent == 'calendar') {
+          try {
+            final now = DateTime.now();
+            final startHour = int.tryParse(startTime.split(':')[0]) ?? 9;
+            final startMinute = int.tryParse(startTime.split(':')[1]) ?? 0;
+            final endHour = int.tryParse(endTime.split(':')[0]) ?? (startHour + 1);
+            final endMinute = int.tryParse(endTime.split(':')[1]) ?? 0;
+
+            final startDt = DateTime(now.year, now.month, now.day, startHour, startMinute);
+            final endDt = DateTime(now.year, now.month, now.day, endHour, endMinute);
+
+            final success = await widget.apiClient.createEvent(
+              title: title,
+              content: content,
+              startTime: startDt.toIso8601String(),
+              endTime: endDt.toIso8601String(),
+            );
+
+            if (success) {
+              reply = '📅 Событие создано: "$title"${startTime.isNotEmpty ? '\n🕐 $startTime-$endTime' : ''}${project.isNotEmpty ? '\n📁 Проект: $project' : ''}';
+            } else {
+              reply = '❌ Не удалось создать событие';
+            }
+          } catch (e) {
+            reply = '❌ Ошибка при создании события';
+          }
+        } else if (intent == 'task') {
+          final aiTags = (aiResult['ai_tags'] as List<dynamic>?)?.map((t) => t.toString()).toList() ?? [];
+
+          await widget.apiClient.createTask(
+            title: title,
+            content: content,
+            project: project,
+            tags: tags,
+            priority: priority,
+            dueDate: dueDate.isNotEmpty ? dueDate : null,
+            aiTags: aiTags,
+          );
+          reply = '✅ Задача создана: "$title"'
+              '${project.isNotEmpty ? '\n📁 Проект: $project' : ''}'
+              '${tags.isNotEmpty ? '\n🏷️ $tags' : ''}'
+              '${dueDate.isNotEmpty ? '\n📅 До: $dueDate' : ''}';
+        } else if (intent == 'note') {
+          final aiTags = (aiResult['ai_tags'] as List<dynamic>?)?.map((t) => t.toString()).toList() ?? [];
+          await widget.apiClient.createNote(title, content, aiTags);
+          reply = '📝 Заметка сохранена: "$title"${aiTags.isNotEmpty ? '\n📌 Теги: ${aiTags.join(", ")}' : ''}';
+        } else {
+          reply = '💡 "$title"';
+        }
       } else {
-        reply = '💡 "$title"';
+        reply = '⚠️ Не удалось обработать запрос';
       }
-    } else {
-      reply = '⚠️ Не удалось обработать запрос';
+
+      _addMessage('assistant', reply);
+    } catch (e) {
+      _addMessage('assistant', '❌ Ошибка соединения');
     }
 
-    _addMessage('assistant', reply);
-    } catch (e) {
-    _addMessage('assistant', '❌ Ошибка соединения');
-    }
-  
     setState(() => _loading = false);
     _scrollDown();
   }
